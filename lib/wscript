@@ -1,0 +1,6 @@
+
+def build(bld):
+    bld.shlib( target = 'TGA', 
+            source = 'tgaImage.cpp', 
+            export_includes = ['.'])
+

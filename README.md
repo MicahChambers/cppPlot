@@ -1,4 +1,18 @@
-cppTGAPlot
-==========
+NPL: Neuro Programs and Libraries
+=======
 
-A C++ library for plotting basic functions and arrays to TGA file. TGA is used because it is a very simple image file format. No external dependencies.
+Need to:
+Clean up accessors interface. Decide on parsimonius set that is also general
+enough to get the job done. Allow Interpolates to take constant input (since
+they don't have a set function anyway)
+
+Next Features:
+Improve interface for iterators/slicers? I don't realy like some of the
+function names and argument orderings.
+Paired iterators? Wraping iterator?
+
+Add basic fMRI inference
+
+motion correction
+
+Fourier Transform? 

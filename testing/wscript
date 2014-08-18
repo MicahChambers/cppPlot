@@ -1,0 +1,7 @@
+
+def build(bld):
+    # test underlying slicer library
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='tga_test1', 
+            source='tga_test1.cpp', 
+            use='TGA')
