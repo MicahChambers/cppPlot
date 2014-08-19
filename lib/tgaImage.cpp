@@ -19,6 +19,10 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <tuple>
+#include <fstream>
+#include <cassert>
+#include <cmath>
 
 #include "tgaImage.h"
 	
@@ -37,7 +41,6 @@ void TGAImage::clear()
 	xrange[1] = NAN;
 	yrange[0] = NAN;
 	yrange[1] = NAN;
-	axes = false;
 	
 	colors.clear();
 	colors.push_back(StyleT("r"));
@@ -46,16 +49,8 @@ void TGAImage::clear()
 	colors.push_back(StyleT("y"));
 	colors.push_back(StyleT("c"));
 	colors.push_back(StyleT("p"));
-	colors.push_back(StyleT("-r"));
-	colors.push_back(StyleT("-g"));
-	colors.push_back(StyleT("-b"));
-	colors.push_back(StyleT("-y"));
-	colors.push_back(StyleT("-c"));
-	colors.push_back(StyleT("-p"));
 
 	curr_color = colors.begin();
-
-	axes = false;
 
 	funcs.clear();
 	arrs.clear();
@@ -80,7 +75,7 @@ void TGAImage::computeRange(size_t xres)
 	bool pad_y = false;;
 
 	// compute range
-	if(!isnormal(xrange[0])) {
+	if(std::isnan(xrange[0]) || std::isinf(xrange[0])) {
 		// compute minimum
 		xrange[0] = INFINITY;
 		for(auto& arr : arrs) {
@@ -91,9 +86,9 @@ void TGAImage::computeRange(size_t xres)
 			}
 		}
 
-		pad_lx = true;
+		pad_x = true;
 	}
-	if(!isnormal(xrange[1])) {
+	if(std::isnan(xrange[1]) || std::isinf(xrange[1])) {
 		// compute minimum
 		xrange[1] = -INFINITY;
 		for(auto& arr : arrs) {
@@ -105,26 +100,27 @@ void TGAImage::computeRange(size_t xres)
 		}
 
 		double pad = (xrange[1]-xrange[0])*1.05;
-		if(pad_lx) 
+		if(pad_x) 
 			xrange[0] -= pad/2;
 		xrange[1] += pad/2;
 	}
 
-	if(!isnormal(yrange[0])) {
+	if(std::isnan(yrange[0]) || std::isinf(yrange[0])) {
 		// compute minimum
 		yrange[0] = INFINITY;
 
 		// from arrays
 		for(auto& arr : arrs) {
 			auto& yarr = std::get<2>(arr);
-			for(auto& v: arr) {
+			for(auto& v: yarr) {
 				if(v < yrange[0]) 
 					yrange[0] = v;
 			}
 		}
 		
 		// from functions, use breaking up x range
-		for(auto& func: funcs) {
+		for(auto& functup: funcs) {
+			auto& func = std::get<1>(functup);
 			double step = (xrange[1]-xrange[0])/xres;
 			for(int64_t ii=0; ii<xres; ii++) {
 				double x = xrange[0]+ii*step;
@@ -133,10 +129,10 @@ void TGAImage::computeRange(size_t xres)
 					yrange[0] = y;
 			}
 		}
-		pad_ly = true;
+		pad_y = true;
 	}
 	
-	if(!isnormal(yrange[1])) {
+	if(std::isnan(yrange[1]) || std::isinf(yrange[1])) {
 		// compute minimum
 		yrange[1] = -INFINITY;
 
@@ -150,7 +146,8 @@ void TGAImage::computeRange(size_t xres)
 		}
 		
 		// from functions, use breaking up x range
-		for(auto& func: funcs) {
+		for(auto& functup: funcs) {
+			auto& func = std::get<1>(functup);
 			double step = (xrange[1]-xrange[0])/xres;
 			for(int64_t ii=0; ii<xres; ii++) {
 				double x = xrange[0]+ii*step;
@@ -161,7 +158,7 @@ void TGAImage::computeRange(size_t xres)
 		}
 
 		double pad = (yrange[1]-yrange[0])*1.05;
-		if(pad_ly) 
+		if(pad_y) 
 			yrange[0] -= pad/2;
 		yrange[1] += pad/2;
 	}
@@ -215,14 +212,18 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 
 	// before performing run-length encoding, we need to fill a buffer 
 	rgba* buffer = new rgba[xres*yres];
+	for(size_t ii=0; ii<xres*yres; ii++) {
+		buffer[ii][0] = 255;
+		buffer[ii][1] = 255;
+		buffer[ii][2] = 255;
+		buffer[ii][3] = 255;
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// fill buffer
 	//////////////////////////////////////////////////////////////////////////
 	computeRange(xres);
 
-	double weights[2][2];
-	int64_t neighbors[2][2];
 	double xstep = (xrange[1]-xrange[0])/xres;
 	double ystep = (yrange[1]-yrange[0])/yres;
 	// start with buffers, interpolating between points
@@ -250,8 +251,8 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 			}
 
 			for( ; xp <= xf && yp <= yf; xp+=dx, yp+=dy) {
-				int64_t xi = std::max(std::min(xres-1, round(xp)), 0);
-				int64_t yi = std::max(std::min(yres-1, round(yp)), 0);
+				int64_t xi = std::max<int>(std::min<int>(xres-1, round(xp)), 0);
+				int64_t yi = std::max<int>(std::min<int>(yres-1, round(yp)), 0);
 				buffer[yi*xres+xi][0] = sty.rgba[0];
 				buffer[yi*xres+xi][1] = sty.rgba[1];
 				buffer[yi*xres+xi][2] = sty.rgba[2];
@@ -276,7 +277,7 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 				yy = foo(xx);
 				yi = (yy-yrange[0])/ystep;
 				dx /= 2;
-			} while(!((yip - yi) < 1));
+			} while((yip - yi) > 1);
 			yip = yi;
 			int64_t yind = round(yi);
 			int64_t xind = round((xx-xrange[0])/xstep);
@@ -288,25 +289,62 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 		}
 	}
 
-	// draw axes
-	if(axes) {
-		// TODO
-	}
+	for(size_t ii=0; ii<xres*yres; ) {
 
-	if(range != 0) {
-		//Write the pixel data
-		if(log) {
-			for(uint32_t ii=0; ii < in.size(); ii++)
-				o.put((unsigned char)(255*std::log(in[ii]-min+1)/range));
-		} else {
-			for(uint32_t ii=0; ii < in.size(); ii++)
-				o.put((unsigned char)(255*(in[ii]-min)/range));
+		/* 
+		 * Determine Run Length
+		 */
+		
+		// find longest run from here
+		size_t runlen = 1;
+		while(ii+runlen<xres*yres && runlen<=128) {
+			if(buffer[ii][0] != buffer[ii+runlen][0] ||
+						buffer[ii][1] != buffer[ii+runlen][1] || 
+						buffer[ii][2] != buffer[ii+runlen][2] || 
+						buffer[ii][3] != buffer[ii+runlen][3]) {
+				break;
+			} else {
+				runlen++;
+			}
 		}
-	} else {
-		for(uint32_t ii=0; ii < in.size(); ii++)
-			o.put(0);
-	}
+		
+		if(runlen > 128)
+			runlen = 128;
 
+		if(runlen > 1) {
+			// run length encode
+			unsigned char packet = 128+(runlen-1);
+			o.put(packet);
+			o.put(buffer[ii][0]);
+			o.put(buffer[ii][1]);
+			o.put(buffer[ii][2]);
+			o.put(buffer[ii][3]);
+		} else {
+			// determine how long things are changing for
+			runlen = 1;
+			while(ii+runlen < xres*yres && runlen<=128) { 
+				if(buffer[ii+runlen-1][0] == buffer[ii+runlen][0] &&
+						buffer[ii+runlen-1][1] == buffer[ii+runlen][1] &&
+						buffer[ii+runlen-1][2] == buffer[ii+runlen][2] &&
+						buffer[ii+runlen-1][3] == buffer[ii+runlen][3]) {
+					break;
+				} else {
+					runlen++;
+				}
+			}
+			if(runlen > 128) runlen = 128;
+			unsigned char packet = (runlen-1);
+			o.put(packet);
+			for(size_t jj=ii; jj<ii+runlen; jj++) {
+				o.put(buffer[jj][0]);
+				o.put(buffer[jj][1]);
+				o.put(buffer[jj][2]);
+				o.put(buffer[jj][3]);
+			}
+		}
+		ii += runlen;
+	}
+	
 	//close the file
 	o.close();
 }
@@ -350,23 +388,23 @@ void TGAImage::setRes(size_t xres, size_t yres)
 	res[1] = yres;
 }
 
-void TGAImage::addFunc(double(*f)(double))
+void TGAImage::addFunc(Function f)
 {
-	addfFunc(*curr_color, f);
+	this->addFunc(*curr_color, f);
 	curr_color++;
 	if(curr_color == colors.end())
 		curr_color = colors.begin();
 }
 
-void TGAImage::addFunc(const std::string& style, double(*f)(double))
+void TGAImage::addFunc(const std::string& style, Function f)
 {
 	StyleT tmps(style);
 	addFunc(tmps, f);
 }
 
-void TGAImage::addFunc(const std::string& style, double(*f)(double))
+void TGAImage::addFunc(const StyleT& style, Function f)
 {
-	funcs.push_back(std::make_tuple<StyleT, (double)*(double)>(style, f));
+	funcs.push_back(std::make_tuple(style, f));
 }
 
 void TGAImage::addArray(size_t sz, double* array)
@@ -378,8 +416,7 @@ void TGAImage::addArray(size_t sz, double* array)
 		tmpy[ii] = array[ii];
 	}
 	
-	arrs.push_back(std::make_tuple<StyleT,vector<double>,vector<double>(
-				*curr_color, tmpx, tmpy));
+	arrs.push_back(std::make_tuple(*curr_color, tmpx, tmpy));
 
 	if(curr_color == colors.end())
 		curr_color = colors.begin();
@@ -394,8 +431,7 @@ void TGAImage::addArray(size_t sz, double* xarr, double* yarr)
 		tmpy[ii] = yarr[ii];
 	}
 
-	arrs.push_back(std::make_tuple<StyleT,vector<double>,vector<double>(
-				*curr_color, tmpx, tmpy));
+	arrs.push_back(std::make_tuple(*curr_color, tmpx, tmpy));
 	
 	if(curr_color == colors.end())
 		curr_color = colors.begin();
@@ -406,12 +442,11 @@ void TGAImage::addArray(const std::string& style, size_t sz, double* array)
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
 	for(size_t ii=0; ii<sz; ii++) {
-		tmpx[ii] = xarr[ii];
-		tmpy[ii] = yarr[ii];
+		tmpx[ii] = ii;
+		tmpy[ii] = array[ii];
 	}
-	tmpstyle(style);
-	arrs.push_back(std::make_tuple<StyleT,vector<double>,vector<double>(style,
-				tmpx, tmpy));
+	StyleT tmpstyle(style);
+	arrs.push_back(std::make_tuple(tmpstyle, tmpx, tmpy));
 }
 
 void TGAImage::addArray(const StyleT& style, size_t sz, double* xarr, double* yarr)
@@ -423,9 +458,6 @@ void TGAImage::addArray(const StyleT& style, size_t sz, double* xarr, double* ya
 		tmpy[ii] = yarr[ii];
 	}
 
-	arrs.push_back(std::make_tuple<StyleT,vector<double>,vector<double>(
-				style, tmpx, tmpy));
+	arrs.push_back(std::make_tuple(style, tmpx, tmpy));
 }
-
-};
 

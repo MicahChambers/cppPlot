@@ -19,11 +19,13 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
+#include <string>
+#include <fstream>
 
 #include "tgaImage.h"
 
 using namespace std;
-using namespace npl;
 
 bool filesame(std::string in1, std::string in2)
 {
@@ -44,26 +46,27 @@ int main()
 {
 	TGAImage img1;
 
-	const size_t RANDLEN = 1024;
+	const size_t RANDLEN = 128;
 	double rand1[RANDLEN];
 	for(size_t ii=0; ii<RANDLEN; ii++) 
 		rand1[ii] = ii;
 
 	// by default, this should generate x values of 0-RANDLEN-1, and y values
 	// are provided
-	img1.addArray(RANDLEN, rand);
+	img1.addArray(RANDLEN, rand1);
 	
 	// now add an array with xvals of a log scale
 	// make xvalues log
 	double xvals[RANDLEN];
-	double maxv = std::exp(RANDLEN-1.);
-	for(size_t ii=0; ii<RANDLEN; ii++) 
-		xvals[ii] = std::exp(ii)/maxv;
-	img1.addArray(RANDLEN, xvals, rand);
+	double maxv = std::exp((double)RANDLEN-1.);
+	for(size_t ii=0; ii<RANDLEN; ii++)  {
+		xvals[ii] = std::exp((double)ii)/maxv;
+	}
+	img1.addArray(RANDLEN, xvals, rand1);
 
 	// default should be 1024 x 768
 	img1.write("test1.tga");
-	img1.write("test2.tga", 1024, 768);
+	img1.write(1024, 768, "test2.tga");
 
 	if(!filesame("test1.tga", "test2.tga")) {
 		return -1;

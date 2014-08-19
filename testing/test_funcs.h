@@ -17,6 +17,10 @@
  *
  *****************************************************************************/
 
+#include <fstream>
+
+using namespace std;
+
 bool filesame(std::string in1, std::string in2)
 {
 	ifstream ifs1(in1.c_str(), ios::binary);

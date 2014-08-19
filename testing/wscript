@@ -5,3 +5,8 @@ def build(bld):
             target='tga_test1', 
             source='tga_test1.cpp', 
             use='TGA')
+    
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='tga_test2', 
+            source='tga_test2.cpp', 
+            use='TGA')

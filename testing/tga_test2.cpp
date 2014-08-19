@@ -24,7 +24,6 @@
 #include "tgaImage.h"
 
 using namespace std;
-using namespace npl;
 
 int main()
 {
@@ -36,21 +35,20 @@ int main()
 		rand1[ii] = ii;
 
 	// test lambda
-	// note that default is 0-1, but that later if you set a different value, 
-	// the entire range will be plotted
+	// note that without a valid range, we won't be doing any calculations
 	img1.addFunc([](double v){return v*v;});
-	img1.write("test2_1.tga");
+//	img1.write("test2_1.tga");
 
 	// test lambda with min and max
-	img1.clear();
-	img1.addFunc(0, 1, [](double v){return v*v;});
-	img1.write("test2_2.tga");
-	
-	if(!filesame("test2_1.tga", "test2_2.tga")) 
-		return -1;
+//	img1.clear();
+	img1.addFunc([](double v){return v+10;});
+//	img1.write("test2_2.tga");
+//	
+//	if(!filesame("test2_1.tga", "test2_2.tga")) 
+//		return -1;
 
 	// changing the range affects all set functions
-	img1.setRange(0, 10);
+	img1.setXRange(0, 10);
 	img1.write("test2_3.tga");
 	
 	if(filesame("test2_1.tga", "test2_3.tga")) 
