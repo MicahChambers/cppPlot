@@ -76,7 +76,8 @@ void TGAImage::write(std::string fname)
  */
 void TGAImage::computeRange(size_t xres)
 {
-	// TODO update to add padding around FOV
+	bool pad_x = false;;
+	bool pad_y = false;;
 
 	// compute range
 	if(!isnormal(xrange[0])) {
@@ -89,6 +90,8 @@ void TGAImage::computeRange(size_t xres)
 					xrange[0] = v;
 			}
 		}
+
+		pad_lx = true;
 	}
 	if(!isnormal(xrange[1])) {
 		// compute minimum
@@ -100,6 +103,11 @@ void TGAImage::computeRange(size_t xres)
 					xrange[1] = v;
 			}
 		}
+
+		double pad = (xrange[1]-xrange[0])*1.05;
+		if(pad_lx) 
+			xrange[0] -= pad/2;
+		xrange[1] += pad/2;
 	}
 
 	if(!isnormal(yrange[0])) {
@@ -125,6 +133,7 @@ void TGAImage::computeRange(size_t xres)
 					yrange[0] = y;
 			}
 		}
+		pad_ly = true;
 	}
 	
 	if(!isnormal(yrange[1])) {
@@ -150,6 +159,11 @@ void TGAImage::computeRange(size_t xres)
 					yrange[1] = y;
 			}
 		}
+
+		double pad = (yrange[1]-yrange[0])*1.05;
+		if(pad_ly) 
+			yrange[0] -= pad/2;
+		yrange[1] += pad/2;
 	}
 }
 
@@ -250,15 +264,27 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 		auto& sty = std::get<0>(func);
 		auto& foo = std::get<1>(func);
 
-		for(size_t ii=0; ii<xres; ii++) {
-			double xx = ii*xstep+xrange[0];
-			double yy = foo(xx);
-			size_t jj = round(jjc);
-
-			buffer[jj*xres + ii][0] = sty.rgba[0];
-			buffer[jj*xres + ii][1] = sty.rgba[1];
-			buffer[jj*xres + ii][2] = sty.rgba[2];
-			buffer[jj*xres + ii][3] = sty.rgba[3];
+		double yip = NAN; // previous y index
+		double yi; // y index
+		double xx = xrange[0];
+		while(xx < xrange[1]) {
+			double xbase = xx;
+			double dx = xstep;
+			double yy;
+			do {
+				xx = xbase + dx;
+				yy = foo(xx);
+				yi = (yy-yrange[0])/ystep;
+				dx /= 2;
+			} while(!((yip - yi) < 1));
+			yip = yi;
+			int64_t yind = round(yi);
+			int64_t xind = round((xx-xrange[0])/xstep);
+			
+			buffer[yind*xres + xind][0] = sty.rgba[0];
+			buffer[yind*xres + xind][1] = sty.rgba[1];
+			buffer[yind*xres + xind][2] = sty.rgba[2];
+			buffer[yind*xres + xind][3] = sty.rgba[3];
 		}
 	}
 
