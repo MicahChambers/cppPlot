@@ -23,7 +23,7 @@
 #include <string>
 #include <fstream>
 
-#include "tgaImage.h"
+#include "basic_plot.h"
 
 using namespace std;
 
@@ -44,7 +44,7 @@ bool filesame(std::string in1, std::string in2)
 
 int main()
 {
-	TGAImage img1;
+	TGAPlot img1;
 
 	const size_t RANDLEN = 128;
 	double rand1[RANDLEN];

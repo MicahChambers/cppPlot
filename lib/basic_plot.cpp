@@ -24,16 +24,16 @@
 #include <cassert>
 #include <cmath>
 
-#include "tgaImage.h"
+#include "basic_plot.h"
 	
-TGAImage::TGAImage(size_t xres, size_t yres)
+TGAPlot::TGAPlot(size_t xres, size_t yres)
 {
 	clear();
 	res[0] = xres;
 	res[1] = yres;
 }
 
-void TGAImage::clear()
+void TGAPlot::clear()
 {
 	res[0] = 1024;
 	res[1] = 768;
@@ -61,7 +61,7 @@ void TGAImage::clear()
  *
  * @param fname File name to write to.
  */
-void TGAImage::write(std::string fname)
+void TGAPlot::write(std::string fname)
 {
 	write(res[0], res[1], fname);
 }
@@ -69,7 +69,7 @@ void TGAImage::write(std::string fname)
 /**
  * @brief If the ranged haven't been provided, then autoset them
  */
-void TGAImage::computeRange(size_t xres)
+void TGAPlot::computeRange(size_t xres)
 {
 	bool pad_x = false;;
 	bool pad_y = false;;
@@ -172,7 +172,7 @@ void TGAImage::computeRange(size_t xres)
  * @param yres Y resolution
  * @param fname Filename
  */
-void TGAImage::write(size_t xres, size_t yres, std::string fname)
+void TGAPlot::write(size_t xres, size_t yres, std::string fname)
 {
 	std::ofstream o(fname.c_str(), std::ios::out | std::ios::binary);
 
@@ -242,21 +242,35 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
 			double dy = yf-yp;
 			
 			// we want to take steps less than 1 in the fastest moving direction
-			if(dx > dy) {
-				dy /= (dx+1);
-				dx /= (dx+1);
+			if(fabs(dx) > fabs(dy)) {
+				dy /= (fabs(dx)+1);
+				dx /= (fabs(dx)+1);
 			} else {
-				dx /= (dy+1);
-				dy /= (dy+1);
+				dx /= (fabs(dy)+1);
+				dy /= (fabs(dy)+1);
 			}
 
-			for( ; xp <= xf && yp <= yf; xp+=dx, yp+=dy) {
+			bool passed = false;
+			while(!passed) {
 				int64_t xi = std::max<int>(std::min<int>(xres-1, round(xp)), 0);
 				int64_t yi = std::max<int>(std::min<int>(yres-1, round(yp)), 0);
 				buffer[yi*xres+xi][0] = sty.rgba[0];
 				buffer[yi*xres+xi][1] = sty.rgba[1];
 				buffer[yi*xres+xi][2] = sty.rgba[2];
 				buffer[yi*xres+xi][3] = sty.rgba[3];
+
+				// step
+				xp+=dx;
+				yp+=dy;
+				if(dx >= 0 && xp >= xf)
+					passed = true;
+				else if(dx < 0 && xp <= xf)
+					passed = true;
+				else if(dy >= 0 && yp >= yf)
+					passed = true;
+				else if(dy < 0 && yp <= yf)
+					passed = true;
+
 			}
 		}
 	}
@@ -356,7 +370,7 @@ void TGAImage::write(size_t xres, size_t yres, std::string fname)
  * @param low Lower bound
  * @param high Upper bound
  */
-void TGAImage::setXRange(double low, double high)
+void TGAPlot::setXRange(double low, double high)
 {
 	xrange[0] = low;
 	xrange[1] = high;
@@ -370,7 +384,7 @@ void TGAImage::setXRange(double low, double high)
  * @param low Lower bound
  * @param high Upper bound
  */
-void TGAImage::setYRange(double low, double high)
+void TGAPlot::setYRange(double low, double high)
 {
 	yrange[0] = low;
 	yrange[1] = high;
@@ -382,13 +396,13 @@ void TGAImage::setYRange(double low, double high)
  * @param xres Width of output image
  * @param yres Height of output image
  */
-void TGAImage::setRes(size_t xres, size_t yres)
+void TGAPlot::setRes(size_t xres, size_t yres)
 {
 	res[0] = xres;
 	res[1] = yres;
 }
 
-void TGAImage::addFunc(Function f)
+void TGAPlot::addFunc(Function f)
 {
 	this->addFunc(*curr_color, f);
 	curr_color++;
@@ -396,18 +410,18 @@ void TGAImage::addFunc(Function f)
 		curr_color = colors.begin();
 }
 
-void TGAImage::addFunc(const std::string& style, Function f)
+void TGAPlot::addFunc(const std::string& style, Function f)
 {
 	StyleT tmps(style);
 	addFunc(tmps, f);
 }
 
-void TGAImage::addFunc(const StyleT& style, Function f)
+void TGAPlot::addFunc(const StyleT& style, Function f)
 {
 	funcs.push_back(std::make_tuple(style, f));
 }
 
-void TGAImage::addArray(size_t sz, double* array)
+void TGAPlot::addArray(size_t sz, double* array)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -422,7 +436,7 @@ void TGAImage::addArray(size_t sz, double* array)
 		curr_color = colors.begin();
 }
 
-void TGAImage::addArray(size_t sz, double* xarr, double* yarr)
+void TGAPlot::addArray(size_t sz, double* xarr, double* yarr)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -437,7 +451,7 @@ void TGAImage::addArray(size_t sz, double* xarr, double* yarr)
 		curr_color = colors.begin();
 };
 
-void TGAImage::addArray(const std::string& style, size_t sz, double* array)
+void TGAPlot::addArray(const std::string& style, size_t sz, double* array)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -449,7 +463,7 @@ void TGAImage::addArray(const std::string& style, size_t sz, double* array)
 	arrs.push_back(std::make_tuple(tmpstyle, tmpx, tmpy));
 }
 
-void TGAImage::addArray(const StyleT& style, size_t sz, double* xarr, double* yarr)
+void TGAPlot::addArray(const StyleT& style, size_t sz, double* xarr, double* yarr)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);

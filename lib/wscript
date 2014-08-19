@@ -1,6 +1,6 @@
 
 def build(bld):
-    bld.shlib( target = 'TGA', 
-            source = 'tgaImage.cpp', 
+    bld.shlib( target = 'basic_plot', 
+            source = 'basic_plot.cpp', 
             export_includes = ['.'])
 

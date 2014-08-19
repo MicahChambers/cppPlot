@@ -26,7 +26,7 @@
 
 typedef char rgba[4];
 
-class TGAImage
+class TGAPlot
 {
 public:
 	struct StyleT;
@@ -34,7 +34,7 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-	TGAImage(size_t xres = 1024, size_t yres = 768);
+	TGAPlot(size_t xres = 1024, size_t yres = 768);
 
 	/**
 	 * @brief Removes all state variables, including plotted points, and

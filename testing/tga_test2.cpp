@@ -21,39 +21,23 @@
 #include <cstdlib>
 
 #include "test_funcs.h"
-#include "tgaImage.h"
+#include "basic_plot.h"
 
 using namespace std;
 
 int main()
 {
-	TGAImage img1;
-
-	const size_t RANDLEN = 1024;
-	double rand1[RANDLEN];
-	for(size_t ii=0; ii<RANDLEN; ii++) 
-		rand1[ii] = ii;
+	TGAPlot img1;
 
 	// test lambda
 	// note that without a valid range, we won't be doing any calculations
 	img1.addFunc([](double v){return v*v;});
-//	img1.write("test2_1.tga");
-
-	// test lambda with min and max
-//	img1.clear();
 	img1.addFunc([](double v){return v+10;});
-//	img1.write("test2_2.tga");
-//	
-//	if(!filesame("test2_1.tga", "test2_2.tga")) 
-//		return -1;
 
 	// changing the range affects all set functions
 	img1.setXRange(0, 10);
 	img1.write("test2_3.tga");
 	
-	if(filesame("test2_1.tga", "test2_3.tga")) 
-		return -1;
-
 	return 0;
 }
 
