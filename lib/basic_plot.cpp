@@ -164,6 +164,11 @@ void TGAPlot::computeRange(size_t xres)
 			yrange[0] -= pad/2;
 		yrange[1] += pad/2;
 	}
+
+	if(fabs(yrange[1]-yrange[0]) < 0.00001)
+		yrange[1] = yrange[0]+0.00001;
+	if(fabs(xrange[1]-xrange[0]) < 0.00001)
+		xrange[1] = xrange[0]+0.00001;
 }
 
 /**
@@ -252,8 +257,9 @@ void TGAPlot::write(size_t xres, size_t yres, std::string fname)
 				dy /= (fabs(dy)+1);
 			}
 
-			bool passed = false;
-			while(!passed) {
+			bool xdone = false;
+			bool ydone = false;
+			while(!xdone || !ydone) {
 				int64_t xi = std::max<int>(std::min<int>(xres-1, round(xp)), 0);
 				int64_t yi = std::max<int>(std::min<int>(yres-1, round(yp)), 0);
 				buffer[yi*xres+xi][0] = sty.rgba[0];
@@ -265,13 +271,13 @@ void TGAPlot::write(size_t xres, size_t yres, std::string fname)
 				xp+=dx;
 				yp+=dy;
 				if(dx >= 0 && xp >= xf)
-					passed = true;
+					xdone = true;
 				else if(dx < 0 && xp <= xf)
-					passed = true;
-				else if(dy >= 0 && yp >= yf)
-					passed = true;
+					xdone = true;
+				if(dy >= 0 && yp >= yf)
+					ydone = true;
 				else if(dy < 0 && yp <= yf)
-					passed = true;
+					ydone = true;
 
 			}
 		}
