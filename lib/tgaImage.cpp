@@ -72,6 +72,88 @@ void TGAImage::write(std::string fname)
 }
 
 /**
+ * @brief If the ranged haven't been provided, then autoset them
+ */
+void TGAImage::computeRange(size_t xres)
+{
+	// TODO update to add padding around FOV
+
+	// compute range
+	if(!isnormal(xrange[0])) {
+		// compute minimum
+		xrange[0] = INFINITY;
+		for(auto& arr : arrs) {
+			auto& xarr = std::get<1>(arr);
+			for(auto& v: xarr) {
+				if(v < xrange[0]) 
+					xrange[0] = v;
+			}
+		}
+	}
+	if(!isnormal(xrange[1])) {
+		// compute minimum
+		xrange[1] = -INFINITY;
+		for(auto& arr : arrs) {
+			auto& xarr = std::get<1>(arr);
+			for(auto& v: xarr) {
+				if(v > xrange[1]) 
+					xrange[1] = v;
+			}
+		}
+	}
+
+	if(!isnormal(yrange[0])) {
+		// compute minimum
+		yrange[0] = INFINITY;
+
+		// from arrays
+		for(auto& arr : arrs) {
+			auto& yarr = std::get<2>(arr);
+			for(auto& v: arr) {
+				if(v < yrange[0]) 
+					yrange[0] = v;
+			}
+		}
+		
+		// from functions, use breaking up x range
+		for(auto& func: funcs) {
+			double step = (xrange[1]-xrange[0])/xres;
+			for(int64_t ii=0; ii<xres; ii++) {
+				double x = xrange[0]+ii*step;
+				double y = func(x);
+				if(y < yrange[0])
+					yrange[0] = y;
+			}
+		}
+	}
+	
+	if(!isnormal(yrange[1])) {
+		// compute minimum
+		yrange[1] = -INFINITY;
+
+		// from arrays
+		for(auto& arr : arrs) {
+			auto& yarr = std::get<2>(arr);
+			for(auto& v: yarr) {
+				if(v > yrange[1]) 
+					yrange[1] = v;
+			}
+		}
+		
+		// from functions, use breaking up x range
+		for(auto& func: funcs) {
+			double step = (xrange[1]-xrange[0])/xres;
+			for(int64_t ii=0; ii<xres; ii++) {
+				double x = xrange[0]+ii*step;
+				double y = func(x);
+				if(y > yrange[1])
+					yrange[1] = y;
+			}
+		}
+	}
+}
+
+/**
  * @brief Write the output image with the given (temporary) resolution.
  * Does not affect the internal resolution
  *
@@ -81,7 +163,126 @@ void TGAImage::write(std::string fname)
  */
 void TGAImage::write(size_t xres, size_t yres, std::string fname)
 {
+	std::ofstream o(fname.c_str(), std::ios::out | std::ios::binary);
 
+	//Write the header
+	o.put(0); //ID
+	o.put(0); //Color Map Type
+	o.put(10); // run length encoded truecolor
+	
+	// color map
+	o.put(0);
+	o.put(0);
+	o.put(0);
+	o.put(0);
+	o.put(0);
+	
+	//X origin
+	o.put(0);
+	o.put(0);
+
+	//Y origin
+	o.put(0);
+	o.put(0);
+
+	//width
+	o.put((xres & 0x00FF));
+	o.put((xres & 0xFF00) / 256);
+	
+	//height
+	o.put((yres & 0x00FF));
+	o.put((yres & 0xFF00) / 256);
+	
+	//depth
+	o.put(32); /* 8 bit bitmap */
+	
+	//descriptor
+	o.put(8); // 8 for RGBA
+
+	// before performing run-length encoding, we need to fill a buffer 
+	rgba* buffer = new rgba[xres*yres];
+
+	//////////////////////////////////////////////////////////////////////////
+	// fill buffer
+	//////////////////////////////////////////////////////////////////////////
+	computeRange(xres);
+
+	double weights[2][2];
+	int64_t neighbors[2][2];
+	double xstep = (xrange[1]-xrange[0])/xres;
+	double ystep = (yrange[1]-yrange[0])/yres;
+	// start with buffers, interpolating between points
+	for(auto& arr: arrs) {
+		auto& sty = std::get<0>(arr);
+		auto& xarr = std::get<1>(arr);
+		auto& yarr = std::get<2>(arr);
+		assert(xarr.size() == yarr.size());
+
+		for(size_t ii=1; ii<xarr.size(); ii++) {
+			double xp = (xarr[ii-1]-xrange[0])/xstep;
+			double xf = (xarr[ii]-xrange[0])/xstep;
+			double dx = xf-xp;
+			double yp = (yarr[ii-1]-yrange[0])/ystep;
+			double yf = (yarr[ii]-yrange[0])/ystep;
+			double dy = yf-yp;
+			
+			// we want to take steps less than 1 in the fastest moving direction
+			if(dx > dy) {
+				dy /= (dx+1);
+				dx /= (dx+1);
+			} else {
+				dx /= (dy+1);
+				dy /= (dy+1);
+			}
+
+			for( ; xp <= xf && yp <= yf; xp+=dx, yp+=dy) {
+				int64_t xi = std::max(std::min(xres-1, round(xp)), 0);
+				int64_t yi = std::max(std::min(yres-1, round(yp)), 0);
+				buffer[yi*xres+xi][0] = sty.rgba[0];
+				buffer[yi*xres+xi][1] = sty.rgba[1];
+				buffer[yi*xres+xi][2] = sty.rgba[2];
+				buffer[yi*xres+xi][3] = sty.rgba[3];
+			}
+		}
+	}
+	
+	for(auto& func: funcs) {
+		auto& sty = std::get<0>(func);
+		auto& foo = std::get<1>(func);
+
+		for(size_t ii=0; ii<xres; ii++) {
+			double xx = ii*xstep+xrange[0];
+			double yy = foo(xx);
+			size_t jj = round(jjc);
+
+			buffer[jj*xres + ii][0] = sty.rgba[0];
+			buffer[jj*xres + ii][1] = sty.rgba[1];
+			buffer[jj*xres + ii][2] = sty.rgba[2];
+			buffer[jj*xres + ii][3] = sty.rgba[3];
+		}
+	}
+
+	// draw axes
+	if(axes) {
+		// TODO
+	}
+
+	if(range != 0) {
+		//Write the pixel data
+		if(log) {
+			for(uint32_t ii=0; ii < in.size(); ii++)
+				o.put((unsigned char)(255*std::log(in[ii]-min+1)/range));
+		} else {
+			for(uint32_t ii=0; ii < in.size(); ii++)
+				o.put((unsigned char)(255*(in[ii]-min)/range));
+		}
+	} else {
+		for(uint32_t ii=0; ii < in.size(); ii++)
+			o.put(0);
+	}
+
+	//close the file
+	o.close();
 }
 
 /**

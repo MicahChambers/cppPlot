@@ -193,7 +193,12 @@ struct StyleT
 	bool bold;
 };
 
+typedef char[4] rgba;
 
+void addRGBA(rgba lhs, rgba rhs)
+{
+	// TODO
+}
 
 class TGAImage
 {
