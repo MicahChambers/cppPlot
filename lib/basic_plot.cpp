@@ -440,6 +440,7 @@ void TGAPlot::addArray(size_t sz, const double* array)
 	
 	arrs.push_back(std::make_tuple(*curr_color, tmpx, tmpy));
 
+	curr_color++;
 	if(curr_color == colors.end())
 		curr_color = colors.begin();
 }
@@ -455,6 +456,7 @@ void TGAPlot::addArray(size_t sz, const double* xarr, const double* yarr)
 
 	arrs.push_back(std::make_tuple(*curr_color, tmpx, tmpy));
 	
+	curr_color++;
 	if(curr_color == colors.end())
 		curr_color = colors.begin();
 };
