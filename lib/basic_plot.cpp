@@ -423,7 +423,7 @@ void TGAPlot::addFunc(const StyleT& style, Function f)
 	funcs.push_back(std::make_tuple(style, f));
 }
 
-void TGAPlot::addArray(size_t sz, double* array)
+void TGAPlot::addArray(size_t sz, const double* array)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -438,7 +438,7 @@ void TGAPlot::addArray(size_t sz, double* array)
 		curr_color = colors.begin();
 }
 
-void TGAPlot::addArray(size_t sz, double* xarr, double* yarr)
+void TGAPlot::addArray(size_t sz, const double* xarr, const double* yarr)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -453,7 +453,7 @@ void TGAPlot::addArray(size_t sz, double* xarr, double* yarr)
 		curr_color = colors.begin();
 };
 
-void TGAPlot::addArray(const std::string& style, size_t sz, double* array)
+void TGAPlot::addArray(const std::string& style, size_t sz, const double* array)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);
@@ -465,7 +465,7 @@ void TGAPlot::addArray(const std::string& style, size_t sz, double* array)
 	arrs.push_back(std::make_tuple(tmpstyle, tmpx, tmpy));
 }
 
-void TGAPlot::addArray(const StyleT& style, size_t sz, double* xarr, double* yarr)
+void TGAPlot::addArray(const StyleT& style, size_t sz, const double* xarr, const double* yarr)
 {
 	std::vector<double> tmpx(sz);
 	std::vector<double> tmpy(sz);

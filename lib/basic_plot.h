@@ -99,10 +99,10 @@ public:
 	void addFunc(const std::string& style, Function f);
 	void addFunc(const StyleT& style, Function f);
 
-	void addArray(size_t sz, double* array);
-	void addArray(size_t sz, double* xarr, double* yarr);
-	void addArray(const std::string& style, size_t sz, double* array);
-	void addArray(const StyleT& style, size_t sz, double* xarr, double* yarr);
+	void addArray(size_t sz, const double* array);
+	void addArray(size_t sz, const double* xarr, const double* yarr);
+	void addArray(const std::string& style, size_t sz, const double* array);
+	void addArray(const StyleT& style, size_t sz, const double* xarr, const double* yarr);
 
 	size_t res[2]; //image size
 	double xrange[2]; 
