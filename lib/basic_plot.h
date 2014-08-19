@@ -16,6 +16,8 @@
  * @file tga_test1.cpp Tests function plotting, 
  *
  *****************************************************************************/
+#ifndef BASIC_PLOT_H
+#define BASIC_PLOT_H
 
 #include <iostream>
 #include <cstdlib>
@@ -23,6 +25,10 @@
 #include <vector>
 #include <tuple>
 
+namespace npl {
+
+template <typename T>
+void writePlot(std::string filename, const std::vector<T>& data);
 
 typedef char rgba[4];
 
@@ -206,3 +212,16 @@ public:
 private:
 	void computeRange(size_t xres);
 };
+
+template <typename T>
+void writePlot(std::string filename, const std::vector<T>& data)
+{
+	TGAPlot plt;
+	plt.addArray(data.size(), data.data());
+	plt.write(filename);
+}
+
+}; //npl
+
+#endif // BASIC_PLOT
+

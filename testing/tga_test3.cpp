@@ -25,6 +25,7 @@
 #include "basic_plot.h"
 
 using namespace std;
+using namespace npl;
 
 int main()
 {

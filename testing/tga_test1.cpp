@@ -26,6 +26,7 @@
 #include "basic_plot.h"
 
 using namespace std;
+using namespace npl;
 
 bool filesame(std::string in1, std::string in2)
 {

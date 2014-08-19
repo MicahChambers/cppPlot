@@ -25,7 +25,9 @@
 #include <cmath>
 
 #include "basic_plot.h"
-	
+
+namespace npl {
+
 TGAPlot::TGAPlot(size_t xres, size_t yres)
 {
 	clear();
@@ -475,3 +477,4 @@ void TGAPlot::addArray(const StyleT& style, size_t sz, double* xarr, double* yar
 	arrs.push_back(std::make_tuple(style, tmpx, tmpy));
 }
 
+}
