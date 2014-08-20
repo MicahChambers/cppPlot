@@ -45,7 +45,7 @@ bool filesame(std::string in1, std::string in2)
 
 int main()
 {
-	TGAPlot img1;
+	Plotter img1;
 
 	const size_t RANDLEN = 128;
 	double rand1[RANDLEN];

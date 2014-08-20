@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @file tga_test1.cpp Tests function plotting, 
+ * @file tga_test2.cpp Tests function plotting, 
  *
  *****************************************************************************/
 
@@ -28,7 +28,7 @@ using namespace npl;
 
 int main()
 {
-	TGAPlot img1;
+	Plotter img1;
 
 	// test lambda
 	// note that without a valid range, we won't be doing any calculations
@@ -37,7 +37,7 @@ int main()
 
 	// changing the range affects all set functions
 	img1.setXRange(0, 10);
-	img1.write("test2_3.tga");
+	img1.write("test2-1.tga");
 	
 	return 0;
 }
