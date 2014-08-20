@@ -30,6 +30,10 @@ namespace npl {
 template <typename T>
 void writePlot(std::string filename, const std::vector<T>& data);
 
+template <typename T>
+void writePlot(std::string filename, const std::vector<T>& data, 
+		size_t xsize, size_t ysize);
+
 typedef char rgba[4];
 
 class TGAPlot
@@ -217,6 +221,16 @@ template <typename T>
 void writePlot(std::string filename, const std::vector<T>& data)
 {
 	TGAPlot plt;
+	plt.addArray(data.size(), data.data());
+	plt.write(filename);
+}
+
+
+template <typename T>
+void writePlot(std::string filename, const std::vector<T>& data, size_t xsize,
+		size_t ysize)
+{
+	TGAPlot plt(xsize, ysize);
 	plt.addArray(data.size(), data.data());
 	plt.write(filename);
 }
