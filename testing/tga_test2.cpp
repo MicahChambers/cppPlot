@@ -28,7 +28,7 @@ using namespace npl;
 
 int main()
 {
-	TGAPlot img1;
+	Plotter img1;
 
 	// test lambda
 	// note that without a valid range, we won't be doing any calculations

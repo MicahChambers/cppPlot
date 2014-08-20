@@ -29,7 +29,7 @@ using namespace npl;
 
 int main()
 {
-	TGAPlot img1;
+	Plotter img1;
 
 	const size_t RANDLEN = 128;
 	double xvals[RANDLEN];

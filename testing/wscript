@@ -15,3 +15,8 @@ def build(bld):
             target='tga_test3', 
             source='tga_test3.cpp', 
             use='basic_plot')
+
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='svg_test1', 
+            source='svg_test1.cpp', 
+            use='basic_plot')
