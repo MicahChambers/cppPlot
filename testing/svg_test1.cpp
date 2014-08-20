@@ -66,12 +66,8 @@ int main()
 	img1.addArray(RANDLEN, xvals, rand1);
 
 	// default should be 1024 x 768
-	img1.write("test1.svg");
-	img1.write(1024, 768, "test2.svg");
-
-	if(!filesame("test1.svg", "test2.svg")) {
-		return -1;
-	}
+	img1.write("test1-1.svg");
+	img1.write(1024, 768, "test1-2.svg");
 
 	return 0;
 }

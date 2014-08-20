@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @file tga_test1.cpp Tests function plotting, 
+ * @file tga_test3.cpp Tests sinc plotting. 
  *
  *****************************************************************************/
 
@@ -45,7 +45,7 @@ int main()
 	// are provided
 	img1.addArray(RANDLEN, xvals, yvals);
 	
-	img1.write("test1.tga");
+	img1.write("test3-1.tga");
 
 	return 0;
 }

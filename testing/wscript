@@ -20,3 +20,18 @@ def build(bld):
             target='svg_test1', 
             source='svg_test1.cpp', 
             use='basic_plot')
+    
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='svg_test2', 
+            source='svg_test2.cpp', 
+            use='basic_plot')
+    
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='svg_test3', 
+            source='svg_test3.cpp', 
+            use='basic_plot')
+    
+    bld.program(install_path='${PREFIX}/tests', features='test', 
+            target='svg_test4', 
+            source='svg_test4.cpp', 
+            use='basic_plot')
