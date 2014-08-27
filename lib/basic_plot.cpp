@@ -435,8 +435,8 @@ int Plotter::writeSVG(size_t xres, size_t yres, std::string fname)
 
 		o << "<polyline fill=\"none\" points=\"";
 		for(size_t ii=0; ii<xarr.size(); ii++) {
-			double x = (xarr[ii-1]-xrange[0])/xstep;
-			double y = (yarr[ii-1]-yrange[0])/ystep;
+			double x = (xarr[ii]-xrange[0])/xstep;
+			double y = (yarr[ii]-yrange[0])/ystep;
 			o << x << "," << y << " ";
 		}
 		o << "\" stroke=\"#";
@@ -447,7 +447,7 @@ int Plotter::writeSVG(size_t xres, size_t yres, std::string fname)
 	
 	// functions
 	for(auto& func: funcs) {
-		auto& sty = std::get<0>(func);
+//		auto& sty = std::get<0>(func);
 		auto& foo = std::get<1>(func);
 
 		double xx = xrange[0];
@@ -465,8 +465,6 @@ int Plotter::writeSVG(size_t xres, size_t yres, std::string fname)
 
 	// create axis
 	o << "<path d=\" ";
-	size_t MINTICKS = 2;
-	double bound = 40;
 	double ticklen = 5;
 	o << "M0 " << yres << " V0 H " << xres;
 
@@ -497,6 +495,38 @@ int Plotter::writeSVG(size_t xres, size_t yres, std::string fname)
 			<< "\" fill=\"black\" transform=\"matrix(1,0,0,-1,0,0)\">" 
 			<< setprecision(3) << p.second << "</text>" << endl;
 	}
+//	
+//	// add x labels 
+//	real = xrange[0];
+//	coord = xres/nticks;
+//	real = coord*xstep + xrange[0];
+//	rounded = ceil(real);
+//	coord = (rounded-xrange[0])/xstep;
+//	while(coord < xres) {
+//		o << "<text x=\"" << coord << "\" y=\"" << -10.
+//			<< "\" fill=\"black\" transform=\"translate(-10) matrix(1,0,0,-1,0,0)\">" 
+//			<< setprecision(3) << rounded << "</text>" << endl;
+//		coord += xres/nticks;
+//		real = coord*xstep + xrange[0];
+//		rounded = ceil(real);;
+//		coord = (rounded-xrange[0])/xstep;
+//	}
+//	// add y ticks
+//	real = yrange[0];
+//	coord = yres/nticks;
+//	real = coord*ystep + yrange[0];
+//	rounded = ceil(real);
+//	coord = (rounded-yrange[0])/ystep;
+//	while(coord < yres) {
+//		o << "<text x=\"" << 15 << "\" y=\"-" << coord-4 
+//			<< "\" fill=\"black\" transform=\"matrix(1,0,0,-1,0,0)\">" 
+//			<< setprecision(3) << rounded << "</text>" << endl;
+//		coord += yres/nticks;
+//		real = coord*ystep + yrange[0];
+//		rounded = ceil(real);
+//		coord = (rounded-yrange[0])/ystep;
+//	}
+
 	//close the file
 	o << "</g></svg>" << endl;
 	o.close();
