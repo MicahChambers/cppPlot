@@ -53,7 +53,7 @@ def configure(conf):
     conf.check(header_name='stdio.h', features='cxx cxxprogram', mandatory=True)
 
 def options(ctx):
-    ctx.load('compiler_cxx')
+    ctx.load('compiler_cxx waf_unit_test')
 
     gr = ctx.get_option_group('configure options')
     
@@ -94,4 +94,9 @@ def build(bld):
         f.write('#define __version__ "%s"\n\n' % gitversion())
         f.close()
 
+    # set up callback for summary
+    from waflib.Tools import waf_unit_test
+    bld.add_post_fun(waf_unit_test.summary)
+
+    # recurse into other wscript files
     bld.recurse('lib testing')
