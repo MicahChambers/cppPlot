@@ -1,18 +1,8 @@
-NPL: Neuro Programs and Libraries
+cppPlot: Basic SVG/tga plotting in c++
 =======
 
-Need to:
-Clean up accessors interface. Decide on parsimonius set that is also general
-enough to get the job done. Allow Interpolates to take constant input (since
-they don't have a set function anyway)
+Thie purpose of this library is to enable very basic function plotting from
+c++. TGA may eventually be deprecated, due to SVG being simpler and not
+requiring functions to create letters/numbers.
 
-Next Features:
-Improve interface for iterators/slicers? I don't realy like some of the
-function names and argument orderings.
-Paired iterators? Wraping iterator?
-
-Add basic fMRI inference
-
-motion correction
-
-Fourier Transform? 
+Currently SVG supports axes and will plot functions and arrays.
